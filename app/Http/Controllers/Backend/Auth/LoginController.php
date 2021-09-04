@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
-use Auth;
 
 class LoginController extends Controller
 {
@@ -48,21 +48,6 @@ class LoginController extends Controller
     
     public function login(Request $request)
     {
-        /* $this->validate($request, [
-            'email'   => 'required|email',
-            'password' => 'required|min:6'
-        ]);
-
-        if (Auth::guard('admin')->attempt(['email' => $request->email, 'password' => $request->password], $request->get('remember'))) {
-            dd(Auth::user());
-            if (Auth::check() &&  Auth::user()->type == 1) {
-                $this->redirectTo = '/admin';
-            } else if (Auth::check() &&  Auth::user()->type == 2) {
-                $this->redirectTo = '/printer';
-            }
-            // return redirect()->intended('/admin');
-        }
-        return back()->withInput($request->only('email', 'remember')); */
 
         $this->validateLogin($request);
 
@@ -113,7 +98,7 @@ class LoginController extends Controller
 
         $this->clearLoginAttempts($request);
 
-        return $this->authenticated($request, $this->guard()->user());// ?: redirect()->intended('/admin');
+        return $this->authenticated($request, $this->guard()->user());
     }
 
     protected function authenticated(Request $request, $user)
@@ -144,11 +129,6 @@ class LoginController extends Controller
         // $request->session()->invalidate();
 
         return $this->loggedOut($request) ?: redirect('/admin');
-    }
-
-    protected function loggedOut(Request $request)
-    {
-        //
     }
 
     protected function guard()
