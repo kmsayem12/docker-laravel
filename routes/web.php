@@ -33,7 +33,12 @@ Route::group(['prefix'=>'admin','namespace'=>'Backend'],function () {
         Route::get('/register',[AdminRegisterController::class,'showRegisterForm'])->name('admin.register');
         Route::post('/register',[AdminRegisterController::class,'create'])->name('admin.register');
     });
-    Route::get('/',[AdminHomeController::class,'index']);
+});
+
+Route::group(['as'=>'admin','prefix'=>'admin','namespace'=>'Backend','middleware'=>['auth:admin','admin']],function () {
+    Route::namespace('Admin')->group(function () {
+        Route::get('/',[AdminHomeController::class,'index']);
+    });
 });
 
 Route::group(['prefix'=>'printer','namespace'=>'Backend','middleware'=>['auth:admin','printer']],function () {
