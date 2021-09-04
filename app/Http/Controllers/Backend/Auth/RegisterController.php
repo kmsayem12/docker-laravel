@@ -10,6 +10,7 @@ use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Registered;
+use App\Http\Controllers\Backend\Auth\LoginController;
 
 class RegisterController extends Controller
 {
@@ -53,7 +54,7 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:admins'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'type' => ['required'],
         ]);
@@ -67,14 +68,22 @@ class RegisterController extends Controller
      */
     protected function create(Request $request)
     {
-        $this->validator($request->all())->validate();
+        $validator = $this->validator($request->all());
+        if ($validator->fails()){
+            return redirect()->back()->withErrors($validator);
+        }
         $admin = Admin::create([
             'name' => $request['name'],
             'email' => $request['email'],
             'password' => Hash::make($request['password']),
             'type' => $request['type'],
         ]);
-        return redirect()->intended('admin/login');
+
+        if($admin){
+            $adminLogin = new LoginController;
+            return $adminLogin->login($request);
+        }
+        return redirect()->back();
     }
 
     public function showRegisterForm()
@@ -84,14 +93,10 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        $this->validator($request->all())->validate();
-
-        event(new Registered($user = $this->create($request->all())));
-
-        $this->guard()->login($user);
-
-        return $this->registered($request, $user)
-                        ?: redirect($this->redirectPath());
+        // event(new Registered($user = $this->create($request)));
+        $user = $this->create($request);
+        // Auth::guard('admin')->login($user);
+        // return $this->registered($request, $user) ?: redirect($this->redirectPath());
     }
 
     /**
