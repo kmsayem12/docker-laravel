@@ -1,0 +1,110 @@
+version: "3.7"
+services:
+  #PHP Service
+  app:
+    build:
+      context: ./.docker/
+      dockerfile: Dockerfile
+    image: laravel-multi-auth
+    container_name: app
+    restart: unless-stopped
+    tty: true
+    # ports:
+    #   - "9000:9000"
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www:cached
+      - ./.docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+  #Nginx Service
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www/
+      - ./.docker/nginx/conf.d/:/etc/nginx/conf.d/
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+  #MySQL Service
+  mysql:
+    platform: linux/amd64
+    # platform: linux/x86_64
+    image: mysql
+    # image: mysql/mysql-server:8.0.23
+    # image: mysql:5.7.22
+    container_name: mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    # tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: laravel
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - /var/data/mysql:/var/lib/mysql
+      - /etc/mysql:/etc/mysql
+      - ./.docker/mysql/my.cnf:/etc/mysql/my.cnf
+      - ./.docker/data/mysql:/var/lib/mysql-files
+    networks:
+      - app-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    depends_on:
+      - mysql
+    ports:
+      - "8081:80"
+    volumes:
+      - /sessions
+    networks:
+      - app-network
+    links:
+      - mysql
+
+  # redis:
+  #   image: redis:alpine
+  #   container_name: redis
+  #   restart: unless-stopped
+  #   tty: true
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - ./data/radis:/data/
+  #   networks:
+  #     - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+#Volumes
+volumes:
+  dbdata:
+    driver: local
