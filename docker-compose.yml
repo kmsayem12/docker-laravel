@@ -43,10 +43,7 @@ services:
   #MySQL Service
   mysql:
     platform: linux/amd64
-    # platform: linux/x86_64
     image: mysql
-    # image: mysql/mysql-server:8.0.23
-    # image: mysql:5.7.22
     container_name: mysql
     restart: unless-stopped
     command: --default-authentication-plugin=mysql_native_password
@@ -96,7 +93,7 @@ services:
   #   ports:
   #     - "6379:6379"
   #   volumes:
-  #     - ./data/radis:/data/
+  #     - ./.docker/data/radis:/data/
   #   networks:
   #     - app-network
 
